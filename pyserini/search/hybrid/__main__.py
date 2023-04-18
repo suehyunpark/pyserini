@@ -20,6 +20,7 @@ import os
 import sys
 
 from tqdm import tqdm
+from pathlib import Path
 
 from pyserini.search.faiss import FaissSearcher
 from pyserini.query_iterator import get_query_iterator, TopicsFormat
@@ -148,6 +149,7 @@ if __name__ == '__main__':
 
     # build output path
     output_path = args.run.output
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     print(f'Running {args.run.topics} topics, saving to {output_path}...')
     tag = 'hybrid'
