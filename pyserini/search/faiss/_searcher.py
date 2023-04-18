@@ -431,6 +431,26 @@ class FaissSearcher:
     def list_prebuilt_indexes():
         """Display information about available prebuilt indexes."""
         get_dense_indexes_info()
+        
+    def split_query_into_chunks(self, query: str, max_length: int = 512) -> List[str]:
+        tokens = query.split()
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for token in tokens:
+            if current_length + len(token) + 1 > max_length:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = []
+                current_length = 0
+
+            current_chunk.append(token)
+            current_length += len(token) + 1
+
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
 
     def search(self, query: Union[str, np.ndarray], k: int = 10, threads: int = 1, return_vector: bool = False) \
             -> Union[List[DenseSearchResult], Tuple[np.ndarray, List[PRFDenseSearchResult]]]:
@@ -453,9 +473,19 @@ class FaissSearcher:
             Or returns the query vector with the list of PRF dense search results with vectors.
         """
         if isinstance(query, str):
-            emb_q = self.query_encoder.encode(query)
-            assert len(emb_q) == self.dimension
-            emb_q = emb_q.reshape((1, len(emb_q)))
+            query_chunks = self.split_query_into_chunks(query, max_length=512)
+        
+            emb_qs = []
+            for chunk in query_chunks:
+                emb_q = self.query_encoder.encode(chunk)
+                assert len(emb_q) == self.dimension
+                emb_qs.append(emb_q.reshape((1, len(emb_q))))
+            
+            # Combine the encoded vectors using mean pooling
+            emb_q = np.mean(np.vstack(emb_qs), axis=0).reshape((1, self.dimension))
+            # emb_q = self.query_encoder.encode(query)
+            # # assert len(emb_q) == self.dimension
+            # emb_q = emb_q.reshape((1, len(emb_q)))
         else:
             emb_q = query
         faiss.omp_set_num_threads(threads)
