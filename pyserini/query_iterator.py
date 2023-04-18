@@ -40,7 +40,7 @@ class QueryIterator(ABC):
                         'msmarco-passage-test-subset'}
 
     def __init__(self, topics: dict, order: list = None):
-        self.order = order if order else sorted(topics.keys())
+        self.order = order if order else sorted(topics.keys(), key=lambda x: int(x))
         self.topics = topics
 
     @abstractmethod
@@ -54,7 +54,7 @@ class QueryIterator(ABC):
 
     def __iter__(self):
         for id_ in self.order:
-            yield id_, self.get_query(id_)
+            yield id_, self.get_query(id_)  # query id, query text
 
     def __len__(self):
         return len(self.topics.keys())
@@ -76,7 +76,7 @@ class QueryIterator(ABC):
 class DefaultQueryIterator(QueryIterator):
 
     def get_query(self, id_):
-        return self.topics[id_].get('title')
+        return self.topics[id_].get('title')  # strangely, the query text is the value of the 'title' key
 
     @classmethod
     def from_topics(cls, topics_path: str):
