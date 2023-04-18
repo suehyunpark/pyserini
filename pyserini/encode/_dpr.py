@@ -14,10 +14,11 @@
 # limitations under the License.
 #
 
-from transformers import DPRContextEncoder, DPRContextEncoderTokenizer, DPRQuestionEncoder, DPRQuestionEncoderTokenizer
+from transformers import logging, DPRContextEncoder, DPRContextEncoderTokenizer, DPRQuestionEncoder, DPRQuestionEncoderTokenizer
 
 from pyserini.encode import DocumentEncoder, QueryEncoder
 
+logging.set_verbosity_error()
 
 class DprDocumentEncoder(DocumentEncoder):
     def __init__(self, model_name, tokenizer_name=None, device='cuda:0'):
